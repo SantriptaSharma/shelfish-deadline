@@ -1,0 +1,2 @@
+#define MAX_KEY_LENGTH 32
+#define MAX_STRING_LENGTH 128
