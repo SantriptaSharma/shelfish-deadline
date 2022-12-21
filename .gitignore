@@ -3,3 +3,4 @@
 .shelf
 
 *.o
+*.out
