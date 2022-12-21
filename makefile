@@ -1,10 +1,10 @@
 CC = gcc
-CFLAGS = -Wall -g -fopenmp
-LIB = -lm
+CFLAGS = -Wall -g
+LIB = -lm -L ./ -lbloom
 MAKE = make
 
-shelfish.out: shelfish.o element.o avl.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LIB)
+shelfish.out: shelfish.o element.o avl.o sstable.o
+	$(CC) $(CFLAGS) -o $* $^ $(LIB)
 
 clean: 
 	rm -rf *.o *.out shelfish

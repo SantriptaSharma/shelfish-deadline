@@ -78,14 +78,13 @@ static void UpdateHeight(AVLNode **root, AVLNode *target)
     if (maxHeight != -1) UpdateHeight(root, target->parent);
 }
 
-void Insert(AVLNode **root, Element *element, bool tombstone)
+void Insert(AVLNode **root, Element *element)
 {
     if (*root == NULL)
     {
         *root = malloc(sizeof(**root));
         (*root)->left = (*root)->right = (*root)->parent = NULL;
         (*root)->element = element;
-        (*root)->isTombstone = false;
         (*root)->height = 0;
         return;
     }
@@ -107,7 +106,6 @@ void Insert(AVLNode **root, Element *element, bool tombstone)
         target->left->parent = target;
         target->left->element = element;
         target->left->height = 0;
-        target->left->isTombstone = tombstone;
     }
     else
     {
@@ -116,7 +114,6 @@ void Insert(AVLNode **root, Element *element, bool tombstone)
         target->right->parent = target;
         target->right->element = element;
         target->right->height = 0;
-        target->right->isTombstone = tombstone;
     }
 
     UpdateHeight(root, target);
@@ -138,6 +135,13 @@ AVLNode* FindMinimum(AVLNode *root)
     if (root == NULL || root->left == NULL) return root;
 
     return FindMinimum(root->left);
+}
+
+AVLNode* FindMaximum(AVLNode *root)
+{
+    if (root == NULL || root->right == NULL) return root;
+
+    return FindMinimum(root->right);
 }
 
 AVLNode* FindSuccessor(AVLNode *target)
@@ -294,7 +298,7 @@ AVLNode* Delete(AVLNode *target)
 static void InOrderRecursive(AVLNode *cur)
 {
     if (cur->left) InOrderRecursive(cur->left);
-    if (!cur->isTombstone) 
+    if (!cur->element->isTombstone) 
     {
         PrintElement(cur->element); 
         printf(" (%d), ", cur->height);

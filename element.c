@@ -6,12 +6,13 @@
 
 #include "length.h"
 
-Element* CreateElement(const char *key, ValueType vt)
+Element* CreateElement(const char *key, ValueType vt, bool tombstone)
 {
     Element *new = malloc(sizeof(*new));
     new->key = malloc(sizeof(*(new->key)) * MAX_KEY_LENGTH);
     strncpy(new->key, key, MAX_KEY_LENGTH);
     new->type = vt;
+    new->isTombstone = tombstone;
 
     if (new->type == VT_INTEGER) new->number = 0; else new->string = malloc(sizeof(*(new->string) * MAX_STRING_LENGTH));
 

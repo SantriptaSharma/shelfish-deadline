@@ -8,12 +8,12 @@ typedef struct _AVLCanonical
 {
     Element *element;
     int height;
-    bool isTombstone;
     struct _AVLCanonical *left, *right, *parent;
 } AVLNode;
 
-void Insert(AVLNode **root, Element* element, bool tombstone);
+void Insert(AVLNode **root, Element* element);
 AVLNode* Find(AVLNode *root, const char* element);
+AVLNode* FindMinimum(AVLNode *root);
 AVLNode* FindMinimum(AVLNode *root);
 AVLNode* FindSuccessor(AVLNode *target);
 void RotateLeft(AVLNode **root, AVLNode *target);

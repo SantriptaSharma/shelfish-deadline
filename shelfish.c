@@ -10,8 +10,10 @@
 #include <math.h>
 
 #include "element.h"
+#include "sstable.h"
 
-#define MAX_MEM_TABLE_HEIGHT 8
+// Defines the maximum size which the AVL tree can reach before it is flushed to disk
+#define MAX_MEM_TABLE_SIZE 128
 
 #include "length.h"
 
@@ -42,6 +44,7 @@ int main()
     closedir(dir);
 
     AVLNode *memTable = NULL;
+    int memTableSize = 0;
 
     LOG("Query engine started. The readme file contains a list of commands.");
     LOG("Force exits WILL cause data loss.");
@@ -111,7 +114,7 @@ int main()
             case '?':
                 node = Find(memTable, key);
 
-                if (node != NULL && !node->isTombstone) 
+                if (node != NULL && !node->element->isTombstone) 
                 {
                     PrintElement(node->element);
                     LOG("%s", "");
@@ -129,11 +132,12 @@ int main()
 
                 if (node != NULL) 
                 {
-                    node->isTombstone = true;
+                    node->element->isTombstone = true;
                 }
                 else 
                 {
-                    Insert(&memTable, CreateElement(key, VT_INTEGER), true);
+                    Insert(&memTable, CreateElement(key, VT_INTEGER, true));
+                    memTableSize++;
                 }
             break;
 
@@ -157,7 +161,11 @@ int main()
                     int num = 0;
                     bool negative = *cursor == '-';
 
-                    if (negative) cursor++;
+                    if (negative) 
+                    {
+                        cursor++;
+                        n--;
+                    }
 
                     while (*cursor != '\0')
                     {
@@ -171,6 +179,8 @@ int main()
                         cursor++;
                     }
 
+                    num *= negative ? -1 : 1;
+
                     char val[MAX_STRING_LENGTH];
 
                     strcpy(val, cursor);
@@ -180,32 +190,37 @@ int main()
 
                     if (isNum)
                     {
-                        el = CreateElement(key, VT_INTEGER);
+                        el = CreateElement(key, VT_INTEGER, false);
                         el->number = num;
                     }
                     else
                     {
-                        el = CreateElement(key, VT_STRING);
+                        el = CreateElement(key, VT_STRING, false);
                         strcpy(el->string, start);
                     }
 
                     if (node)
                     {
-                        node->isTombstone = false;
                         node->element = el;
                     }
                     else
                     {
-                        Insert(&memTable, el, false);
+                        Insert(&memTable, el);
+                        memTableSize++;
                     }
                 }
             break;
         }
 
-        PrintInOrder(memTable);
+        if (memTableSize > MAX_MEM_TABLE_SIZE)
+        {
+            MemorySSSegment *seg = CreateSegmentFromTable(memTable, memTableSize);
+        }
 
         free(line);
     }
+
+    // TODO: Final flush to disk here
 
     FreeAVL(memTable);
 }
