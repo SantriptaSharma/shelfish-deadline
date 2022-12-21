@@ -12,7 +12,7 @@ typedef struct _AVLCanonical
     struct _AVLCanonical *left, *right, *parent;
 } AVLNode;
 
-void Insert(AVLNode **root, Element* element);
+void Insert(AVLNode **root, Element* element, bool tombstone);
 AVLNode* Find(AVLNode *root, const char* element);
 AVLNode* FindMinimum(AVLNode *root);
 AVLNode* FindSuccessor(AVLNode *target);

@@ -7,10 +7,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 #include "element.h"
 
-#define MAX_MEM_TABLE_HEIGHT 9
+#define MAX_MEM_TABLE_HEIGHT 8
 
 #include "length.h"
 
@@ -40,7 +41,10 @@ int main()
 
     closedir(dir);
 
-    AVLNode *mem_table = NULL;
+    AVLNode *memTable = NULL;
+
+    LOG("Query engine started. The readme file contains a list of commands.");
+    LOG("Force exits WILL cause data loss.");
 
     while (true)
     {
@@ -62,9 +66,27 @@ int main()
             break;
         }
 
+        char op = line[0];
+        char *cursor = line;
+
+        if (op == '-' || op == '?') 
+        {
+            cursor++;
+            length--;
+        }
+        
         char *buffer = malloc(sizeof(*buffer) * (length + 1));
 
-        sscanf(line, "%s", buffer);
+        int found = sscanf(cursor, "%s", buffer);
+
+        if (!found)
+        {
+            LOG("Key not found");
+            free(buffer);
+            free(line);
+            continue;
+        }
+
         size_t keyLength = strlen(buffer);
         if (keyLength == 0 || keyLength >= MAX_KEY_LENGTH)
         {
@@ -74,53 +96,116 @@ int main()
             continue;
         }
 
-        char *cursor = line + keyLength;
         char key[MAX_KEY_LENGTH];
         strcpy(key, buffer);
 
-        sscanf(cursor, "%s", buffer);
-        size_t valLength = strlen(buffer);
-        if (valLength == 0 || valLength >= MAX_STRING_LENGTH)
-        {
-            LOG("Invalid value size");
-            free(buffer);
-            free(line);
-            continue;
-        }
-
-        bool isNumber = true;
-        for (int i = 0; i < valLength; i++)
-        {
-            if (!isdigit(buffer[i]))
-            {
-                isNumber = false;
-                break;
-            }
-        }
-
-        if (isNumber)
-        {
-            int value = strtol(buffer, NULL, 10);
-            Element *e = CreateElement(key, VT_INTEGER);
-            e->number = value;
-            Insert(&mem_table, e);
-            LOG("Inserted %s:%d", key, value);
-        }
-        else
-        {
-            char value[MAX_STRING_LENGTH];
-            strcpy(value, buffer);
-            Element *e = CreateElement(key, VT_STRING);
-            strcpy(e->string, value);
-            Insert(&mem_table, e);
-            LOG("Inserted %s:%s", key, value);
-        }
-
-        PrintInOrder(mem_table);
-
         free(buffer);
+
+        cursor += keyLength;
+        while (*cursor == ' ') cursor++;
+
+        AVLNode *node = NULL;
+
+        switch (op)
+        {
+            case '?':
+                node = Find(memTable, key);
+
+                if (node != NULL && !node->isTombstone) 
+                {
+                    PrintElement(node->element);
+                    LOG("%s", "");
+                }
+                else 
+                {
+                    LOG("Key %s not found", key);
+                }
+
+                //TODO: Go through disk entries
+            break;
+
+            case '-':
+                node = Find(memTable, key);
+
+                if (node != NULL) 
+                {
+                    node->isTombstone = true;
+                }
+                else 
+                {
+                    Insert(&memTable, CreateElement(key, VT_INTEGER), true);
+                }
+            break;
+
+            default:
+                if (*cursor == '\0')
+                {
+                    LOG("No value provided for key %s", key);
+                }
+                else
+                {
+                    bool isNum = true;
+                    int n = strlen(cursor);
+
+                    if (n >= MAX_STRING_LENGTH)
+                    {
+                        LOG("Value too long (Longer than %d characters)", MAX_STRING_LENGTH - 1);
+                        break;
+                    }
+
+                    char * const start = cursor;
+                    int num = 0;
+                    bool negative = *cursor == '-';
+
+                    if (negative) cursor++;
+
+                    while (*cursor != '\0')
+                    {
+                        if (!isdigit(*cursor))
+                        {
+                            isNum = false;
+                            break;
+                        }
+
+                        num += (*cursor - '0') * pow(10, --n);
+                        cursor++;
+                    }
+
+                    char val[MAX_STRING_LENGTH];
+
+                    strcpy(val, cursor);
+
+                    Element *el = NULL;
+                    node = Find(memTable, key);
+
+                    if (isNum)
+                    {
+                        el = CreateElement(key, VT_INTEGER);
+                        el->number = num;
+                    }
+                    else
+                    {
+                        el = CreateElement(key, VT_STRING);
+                        strcpy(el->string, start);
+                    }
+
+                    if (node)
+                    {
+                        node->isTombstone = false;
+                        node->element = el;
+                    }
+                    else
+                    {
+                        Insert(&memTable, el, false);
+                    }
+                }
+            break;
+        }
+
+        PrintInOrder(memTable);
+
         free(line);
     }
 
-    FreeAVL(mem_table);
+    FreeAVL(memTable);
 }
