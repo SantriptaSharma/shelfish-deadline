@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g
-LIB = -lm -L ./ -lbloom
+LIB = -lm
 MAKE = make
 
 shelfish.out: shelfish.o element.o avl.o sstable.o

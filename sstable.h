@@ -2,7 +2,6 @@
 #define _SSTABLE_H_
 
 #include "element.h"
-#include "bloom.h"
 #include "avl.h"
 #include "shelf.h"
 
