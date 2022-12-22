@@ -4,17 +4,18 @@
 #include "element.h"
 #include "bloom.h"
 #include "avl.h"
+#include "shelf.h"
 
 typedef struct _SSTableSegment 
 {
     int keyCount;
     Element **elements;
-    char *keyRange[2];
+    bool isOwner;
 } MemorySSSegment;
 
 MemorySSSegment* CreateSegmentFromTable(AVLNode *root, int count);
 MemorySSSegment* ReadSegmentFromFile(char *filename);
-MemorySSSegment* WriteSegmentToFile(MemorySSSegment *segment, char *filename);
-MemorySSSegment* MergeSegments(MemorySSSegment *segment1, MemorySSSegment *segment2);
+int GetDiskTableLength(char *filename);
+Shelf* WriteSegmentToFile(MemorySSSegment *segment, const char *directory, int index);
 void FreeSegment(MemorySSSegment *segment);
 #endif

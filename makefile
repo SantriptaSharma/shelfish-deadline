@@ -8,7 +8,7 @@ shelfish.out: shelfish.o element.o avl.o sstable.o
 
 clean: 
 	rm -rf *.o *.out shelfish
-	rm -rf ./.shelf
+	rm -rf ./.shelves
 
 %.o: %.c %.h
 	$(CC) $(CFLAGS) -c $<

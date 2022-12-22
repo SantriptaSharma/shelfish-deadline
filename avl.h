@@ -14,7 +14,7 @@ typedef struct _AVLCanonical
 void Insert(AVLNode **root, Element* element);
 AVLNode* Find(AVLNode *root, const char* element);
 AVLNode* FindMinimum(AVLNode *root);
-AVLNode* FindMinimum(AVLNode *root);
+AVLNode* FindMaximum(AVLNode *root);
 AVLNode* FindSuccessor(AVLNode *target);
 void RotateLeft(AVLNode **root, AVLNode *target);
 void RotateRight(AVLNode **root, AVLNode *target);
